@@ -4,7 +4,7 @@
     },
 
     "nfc": {
-        "port": "usbserial-0001", 
+        "port": "ttyS0", 
         "driver": "pn532",
         "broadcast": true
     },
@@ -20,5 +20,9 @@
         "express": true,
         "finish": "silver",
         "flow": "fast"
+    },
+
+    "lock": {
+        "socketfile": "/dev/shm/physlock-ipc.socket"
     }
 }

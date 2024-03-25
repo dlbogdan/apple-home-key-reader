@@ -4,6 +4,7 @@ from pyhap.accessory import Accessory
 from pyhap.const import CATEGORY_DOOR_LOCK
 
 from service import Service
+from ipcservice import IPCService
 
 log = logging.getLogger()
 
@@ -12,7 +13,7 @@ log = logging.getLogger()
 class Lock(Accessory):
     category = CATEGORY_DOOR_LOCK
 
-    def __init__(self, *args, service: Service, lock_state_at_startup=1, **kwargs):
+    def __init__(self, *args, service: Service, ipcservice:IPCService, lock_state_at_startup=1, **kwargs):
         super().__init__(*args, **kwargs)
         self._last_client_public_keys = None
 
@@ -20,18 +21,31 @@ class Lock(Accessory):
         self._lock_current_state = lock_state_at_startup
 
         self.service = service
+        self.ipcservice = ipcservice
         self.service.on_endpoint_authenticated = self.on_endpoint_authenticated
+        self.ipcservice.on_received = self.on_physical_lock_received
         self.add_lock_service()
         self.add_nfc_access_service()
 
+    def on_physical_lock_received(self,value):
+        log.info(f"received {value} from physical lock")
+        self._lock_target_state = value
+        self.lock_target_state.set_value(value, should_notify=True)
+        self._lock_current_state = self._lock_target_state
+        self.lock_current_state.set_value(self._lock_current_state, should_notify=True)
+        
+    
     def on_endpoint_authenticated(self, endpoint):
         self._lock_target_state = 0 if self._lock_current_state else 1
         log.info(
             f"Toggling lock state due to endpoint authentication event {self._lock_target_state} -> {self._lock_current_state} {endpoint}"
         )
         self.lock_target_state.set_value(self._lock_target_state, should_notify=True)
-        self._lock_current_state = self._lock_target_state
-        self.lock_current_state.set_value(self._lock_current_state, should_notify=True)
+        #self._lock_current_state = self._lock_target_state
+        #self.lock_current_state.set_value(self._lock_current_state, should_notify=True)
+        #self.external_drivelock(self._lock_current_state)
+        self.physical_drive_lock(self._lock_target_state)
+        #log.info()
 
     def add_preload_service(self, service, chars=None, unique_id=None):
         """Create a service with the given name and add it to this acc."""
@@ -118,11 +132,17 @@ class Lock(Accessory):
     def get_lock_target_state(self):
         log.info("get_lock_target_state")
         return self._lock_target_state
-
+    
+    def physical_drive_lock(self, value):
+        self.ipcservice.send(value)
+    
     def set_lock_target_state(self, value):
         log.info(f"set_lock_target_state {value}")
-        self._lock_target_state = self._lock_current_state = value
-        self.lock_current_state.set_value(self._lock_current_state, should_notify=True)
+        self._lock_target_state=value
+        self.lock_target_state.set_value(self._lock_target_state, should_notify=True)
+        #self._lock_target_state = self._lock_current_state = value
+        #self.lock_current_state.set_value(self._lock_current_state, should_notify=True)
+        self.physical_drive_lock(self._lock_target_state)
         return self._lock_target_state
 
     def get_lock_version(self):

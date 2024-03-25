@@ -9,6 +9,7 @@ from accessory import Lock
 from util.bfclf import BroadcastFrameContactlessFrontend
 from repository import Repository
 from service import Service
+from ipcservice import IPCService
 
 # By default, this file is located in the same folder as the project
 CONFIGURATION_FILE_PATH = "configuration.json"
@@ -30,12 +31,13 @@ def configure_logging(config: dict):
     return log
 
 
-def configure_hap_accessory(config: dict, homekey_service=None):
+def configure_hap_accessory(config: dict, homekey_service=None, ipc_service=None):
     driver = AccessoryDriver(port=config["port"], persist_file=config["persist"])
     accessory = Lock(
         driver,
         "NFC Lock",
         service=homekey_service,
+        ipcservice=ipc_service,
         lock_state_at_startup=int(config.get("default") != "unlocked")
     )
     driver.add_accessory(accessory=accessory)
@@ -48,6 +50,13 @@ def configure_nfc_device(config: dict):
         broadcast_enabled=config.get("broadcast", True),
     )
     return clf
+
+
+def configure_lock_ipc(config: dict):
+    ipcservice = IPCService(
+        sockfile=config.get("socketfile"),
+    )
+    return ipcservice
 
 
 def configure_homekey_service(config: dict, nfc_device, repository=None):
@@ -67,21 +76,36 @@ def main():
 
     nfc_device = configure_nfc_device(config["nfc"])
     homekey_service = configure_homekey_service(config["homekey"], nfc_device)
-    hap_driver, _ = configure_hap_accessory(config["hap"], homekey_service)
+    try:
+        ipc_service = configure_lock_ipc(config["lock"])
+        # ipc_service_enabled = True
+    except KeyError:
+        log.info("No IPC configured")
+        # ipc_service_enabled = False
+    hap_driver, _ = configure_hap_accessory(config["hap"], homekey_service, ipc_service)
 
     for s in (signal.SIGINT, signal.SIGTERM):
         signal.signal(
             s,
             lambda *_: (
                 log.info(f"SIGNAL {s}"),
-                homekey_service.stop(),
                 hap_driver.stop(),
+                homekey_service.stop(),
+                ipc_service.stop(),
             ),
         )
-
+    # taskmanager.addtask(ipc_service)
+    # taskmanager.addtask(homekey_service)
+    # taskmanager.addtask(hap_driver)
+    
+    # taskmanager.start()
+    # hap_driver.start()
+    ipc_service.start()  # we need the client, which is the physical lock process driver, to be connected before continuing.
     homekey_service.start()
     hap_driver.start()
 
+    # if ipc_service_enabled:
+    
 
 if __name__ == "__main__":
     main()
