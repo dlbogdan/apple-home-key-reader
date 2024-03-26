@@ -34,9 +34,13 @@ def configure_logging(config: dict):
 def configure_hap_accessory(config: dict, homekey_service=None, ipc_service=None):
     driver = AccessoryDriver(
         port=config["port"], persist_file=config["persist"])
+    try:
+        display_name = config["display_name"]
+    except KeyError:
+        display_name = "NFC Lock"
     accessory = Lock(
         driver,
-        "NFC Lock",
+        display_name,
         service=homekey_service,
         ipcservice=ipc_service,
         lock_state_at_startup=int(config.get("default") != "unlocked")
