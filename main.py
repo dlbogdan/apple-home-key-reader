@@ -96,18 +96,13 @@ def main():
                 ipc_service.stop(),
             ),
         )
-    # taskmanager.addtask(ipc_service)
-    # taskmanager.addtask(homekey_service)
-    # taskmanager.addtask(hap_driver)
+    # TODO: print this on an I2C/SPI screen permanently attached to the raspberry pi
+    log.info(f"PAIRED : {hap_driver.state.paired}")
+    log.info(f"PINCODE: {hap_driver.state.pincode.decode()}")
 
-    # taskmanager.start()
-    # hap_driver.start()
-    # we need the client, which is the physical lock process driver, to be connected before continuing.
     ipc_service.start()
     homekey_service.start()
     hap_driver.start()
-
-    # if ipc_service_enabled:
 
 
 if __name__ == "__main__":

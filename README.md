@@ -12,7 +12,7 @@ This project offers a demonstration of an Apple Home Key Reader built in Python.
 * Fully functional Apple Home Key NFC authentication;
 * NFC Express mode support;
 * HAP configuration (as a virtual lock);
-* Simple unix socket interface to provide a way to drive a physical lock
+* Simple unix socket interface to provide a way to drive a physical lock [in progress]
 
 It's intended for makers and developers interested in building practical and user-friendly applications using this example.  
 Feel free to give it a try! :)

@@ -26,7 +26,7 @@ class Lock(Accessory):
         self.ipcservice.on_received = self.on_physical_lock_received
         self.add_lock_service()
         self.add_nfc_access_service()
-
+       
     def on_physical_lock_received(self, value):
         log.info(f"received {value} from physical lock")
         self._lock_target_state = value
