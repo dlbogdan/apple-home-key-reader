@@ -32,7 +32,8 @@ def configure_logging(config: dict):
 
 
 def configure_hap_accessory(config: dict, homekey_service=None, ipc_service=None):
-    driver = AccessoryDriver(port=config["port"], persist_file=config["persist"])
+    driver = AccessoryDriver(
+        port=config["port"], persist_file=config["persist"])
     accessory = Lock(
         driver,
         "NFC Lock",
@@ -82,7 +83,8 @@ def main():
     except KeyError:
         log.info("No IPC configured")
         # ipc_service_enabled = False
-    hap_driver, _ = configure_hap_accessory(config["hap"], homekey_service, ipc_service)
+    hap_driver, _ = configure_hap_accessory(
+        config["hap"], homekey_service, ipc_service)
 
     for s in (signal.SIGINT, signal.SIGTERM):
         signal.signal(
@@ -97,15 +99,16 @@ def main():
     # taskmanager.addtask(ipc_service)
     # taskmanager.addtask(homekey_service)
     # taskmanager.addtask(hap_driver)
-    
+
     # taskmanager.start()
     # hap_driver.start()
-    ipc_service.start()  # we need the client, which is the physical lock process driver, to be connected before continuing.
+    # we need the client, which is the physical lock process driver, to be connected before continuing.
+    ipc_service.start()
     homekey_service.start()
     hap_driver.start()
 
     # if ipc_service_enabled:
-    
+
 
 if __name__ == "__main__":
     main()

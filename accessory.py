@@ -13,7 +13,7 @@ log = logging.getLogger()
 class Lock(Accessory):
     category = CATEGORY_DOOR_LOCK
 
-    def __init__(self, *args, service: Service, ipcservice:IPCService, lock_state_at_startup=1, **kwargs):
+    def __init__(self, *args, service: Service, ipcservice: IPCService, lock_state_at_startup=1, **kwargs):
         super().__init__(*args, **kwargs)
         self._last_client_public_keys = None
 
@@ -27,25 +27,26 @@ class Lock(Accessory):
         self.add_lock_service()
         self.add_nfc_access_service()
 
-    def on_physical_lock_received(self,value):
+    def on_physical_lock_received(self, value):
         log.info(f"received {value} from physical lock")
         self._lock_target_state = value
         self.lock_target_state.set_value(value, should_notify=True)
         self._lock_current_state = self._lock_target_state
-        self.lock_current_state.set_value(self._lock_current_state, should_notify=True)
-        
-    
+        self.lock_current_state.set_value(
+            self._lock_current_state, should_notify=True)
+
     def on_endpoint_authenticated(self, endpoint):
         self._lock_target_state = 0 if self._lock_current_state else 1
         log.info(
             f"Toggling lock state due to endpoint authentication event {self._lock_target_state} -> {self._lock_current_state} {endpoint}"
         )
-        self.lock_target_state.set_value(self._lock_target_state, should_notify=True)
-        #self._lock_current_state = self._lock_target_state
-        #self.lock_current_state.set_value(self._lock_current_state, should_notify=True)
-        #self.external_drivelock(self._lock_current_state)
+        self.lock_target_state.set_value(
+            self._lock_target_state, should_notify=True)
+        # self._lock_current_state = self._lock_target_state
+        # self.lock_current_state.set_value(self._lock_current_state, should_notify=True)
+        # self.external_drivelock(self._lock_current_state)
         self.physical_drive_lock(self._lock_target_state)
-        #log.info()
+        # log.info()
 
     def add_preload_service(self, service, chars=None, unique_id=None):
         """Create a service with the given name and add it to this acc."""
@@ -68,7 +69,8 @@ class Lock(Accessory):
         serv_info = self.driver.loader.get_service("AccessoryInformation")
         serv_info.configure_char("Name", value=self.display_name)
         serv_info.configure_char("SerialNumber", value="default")
-        serv_info.add_characteristic(self.driver.loader.get_char("HardwareFinish"))
+        serv_info.add_characteristic(
+            self.driver.loader.get_char("HardwareFinish"))
         serv_info.configure_char(
             "HardwareFinish", getter_callback=self.get_hardware_finish
         )
@@ -88,7 +90,8 @@ class Lock(Accessory):
             value=0,
         )
 
-        self.service_lock_management = self.add_preload_service("LockManagement")
+        self.service_lock_management = self.add_preload_service(
+            "LockManagement")
 
         self.lock_control_point = self.service_lock_management.configure_char(
             "LockControlPoint",
@@ -132,16 +135,17 @@ class Lock(Accessory):
     def get_lock_target_state(self):
         log.info("get_lock_target_state")
         return self._lock_target_state
-    
+
     def physical_drive_lock(self, value):
         self.ipcservice.send(value)
-    
+
     def set_lock_target_state(self, value):
         log.info(f"set_lock_target_state {value}")
-        self._lock_target_state=value
-        self.lock_target_state.set_value(self._lock_target_state, should_notify=True)
-        #self._lock_target_state = self._lock_current_state = value
-        #self.lock_current_state.set_value(self._lock_current_state, should_notify=True)
+        self._lock_target_state = value
+        self.lock_target_state.set_value(
+            self._lock_target_state, should_notify=True)
+        # self._lock_target_state = self._lock_current_state = value
+        # self.lock_current_state.set_value(self._lock_current_state, should_notify=True)
         self.physical_drive_lock(self._lock_target_state)
         return self._lock_target_state
 
