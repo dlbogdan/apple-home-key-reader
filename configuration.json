@@ -23,7 +23,11 @@
         "flow": "fast"
     },
 
-    "lock": {
+    "physical_lock_ipc": {
         "socketfile": "/dev/shm/physlock-ipc.socket"
+    },
+
+    "mqtt_client": {
+        "server_ip": "127.0.0.1"
     }
 }

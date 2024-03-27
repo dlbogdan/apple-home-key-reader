@@ -82,10 +82,10 @@ def main():
     nfc_device = configure_nfc_device(config["nfc"])
     homekey_service = configure_homekey_service(config["homekey"], nfc_device)
     try:
-        ipc_service = configure_lock_ipc(config["lock"])
+        ipc_service = configure_lock_ipc(config["physical_lock_ipc"])
         # ipc_service_enabled = True
     except KeyError:
-        log.info("No IPC configured")
+        log.info("No Physical Lock IPC configured")
         # ipc_service_enabled = False
     hap_driver, _ = configure_hap_accessory(
         config["hap"], homekey_service, ipc_service)
